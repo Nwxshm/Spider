@@ -47,8 +47,9 @@ public class SpiderAction extends HttpServlet{
 		//调用爬虫，并返回状态,爬虫存放路径根据实际情况修改，注意\\方向和在资源管理器中方向一样
 		
 		String time = request.getParameter("ChoiceTime");
+		// /home/louyu/info/a.xls
 		String name = "施工许可-"+time+".xls";
-		String local_url="D:\\"+name;
+		String local_url="/home/louyu/info/"+name;
 		fileName = local_url;
     	int state=call_spider(time,local_url);
     	//info为返回信息，判断是否ftp文件上传成功。
@@ -79,14 +80,29 @@ public class SpiderAction extends HttpServlet{
 		}
 	 
 	
-	public static int call_spider(String date ,String filename){
-    	//scrapy crawl build -a date=2018-05 -a filename=D:\\c.xls
+	public static void writeToFile(String info,String filename) throws IOException {
+		
+		File file =new File(filename);
+		Writer out =new FileWriter(file);
+		out.write(info);
+		out.close();
+	}
 
-		String call = "cmd.exe /c D: &&  cd /tutorial && scrapy crawl build -a date="+date +" -a filename="+filename;
-		//String call = "cmd.exe /c D: &&  echo 1234 > " + filename ;
-		Runtime runtime = Runtime.getRuntime();
+	public static int call_spider(String date ,String filename){
+
+		    //爬虫执行命令，写入脚本文件
+            String info = "cd /home/louyu/ && source env/bin/activate && cd spider/tutorial && scrapy crawl build -a date="+date +" -a filename="+filename;
+	       //脚本文件
+	        String shellname = "/home/louyu/shell.sh";
+	        //执行脚本文件的命令
+            String call="/bin/sh " +shellname;
+          
+            System.out.println("call：" + call);
+        	Runtime runtime = Runtime.getRuntime();
     	
 		try {
+			//将执行的命令写入脚本文件
+			writeToFile(info,shellname);
 			Process process = runtime.exec(call);
 			
 			new Thread(new StreamDrainer(process.getInputStream())).start();
@@ -103,11 +119,10 @@ public class SpiderAction extends HttpServlet{
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		
+		
 		return 1;
 	}
-	/*public void doPost(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        doGet(request, response);
-    }*/
+
 	
 }
